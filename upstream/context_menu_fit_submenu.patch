@@ -1,0 +1,63 @@
+diff --git a/app/assets/javascripts/context_menu.js b/app/assets/javascripts/context_menu.js
+index 7feb603..a5cc2aa 100644
+--- a/app/assets/javascripts/context_menu.js
++++ b/app/assets/javascripts/context_menu.js
+@@ -166,6 +166,50 @@ function contextMenuShow(event) {
+   });
+ }
+ 
++/* keeps a submenu inside the viewport when it opens: on the other side of the
++   menu if that fits, otherwise against the screen edge with more room */
++function contextMenuFitSubmenu() {
++  var submenu = $(this).children('ul')[0];
++  var margin = 2;
++  var rect;
++  var parent_rect;
++  var view_width;
++  var view_height;
++  var left;
++  var top;
++
++  if (!submenu) return;
++  submenu.style.left = submenu.style.right = '';
++  submenu.style.top = submenu.style.bottom = '';
++  rect = submenu.getBoundingClientRect();
++  if (rect.width === 0) return;
++
++  view_width = document.documentElement.clientWidth;
++  view_height = document.documentElement.clientHeight;
++
++  if (rect.left < 0 || rect.right > view_width) {
++    parent_rect = this.parentNode.getBoundingClientRect();
++    if (view_width - parent_rect.right >= rect.width) {
++      left = parent_rect.right;
++    } else if (parent_rect.left >= rect.width) {
++      left = parent_rect.left - rect.width;
++    } else if (view_width - parent_rect.right >= parent_rect.left) {
++      left = view_width - rect.width - margin;
++    } else {
++      left = margin;
++    }
++    left = Math.max(left, margin);
++    submenu.style.left = (submenu.offsetLeft + left - rect.left) + 'px';
++    submenu.style.right = 'auto';
++  }
++
++  if (rect.top < 0 || rect.bottom > view_height) {
++    top = Math.max(Math.min(rect.top, view_height - rect.height - margin), margin);
++    submenu.style.top = (submenu.offsetTop + top - rect.top) + 'px';
++    submenu.style.bottom = 'auto';
++  }
++}
++
+ function contextMenuSetLastSelected(tr) {
+   $('.cm-last').removeClass('cm-last');
+   tr.addClass('cm-last');
+@@ -230,6 +274,7 @@ function contextMenuInit() {
+     $(document).click(contextMenuClick);
+     $(document).contextmenu(contextMenuRightClick);
+     $(document).on('click', '.js-contextmenu', contextMenuRightClick);
++    $(document).on('mouseenter', '#context-menu li.folder', contextMenuFitSubmenu);
+     contextMenuObserving = true;
+   }
+ }
